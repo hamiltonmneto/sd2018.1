@@ -1,0 +1,378 @@
+:sectnums:
+:toc: left
+:toclevels:
+:toc-title: Conteúdo
+:experimental:
+:description: Tutorial Fast Django
+:keywords: AsciiDoc
+:source-highlighter: prettify
+
+= Anotações Tutorial Fast Django
+:author: André Bessa
+:email: andrebessa@gmail.com
+
+== Setup Inicial
+
+=== Instalando Virtualenv
+
+Linux
+
+    pip install virtualenv
+    virtualenv myvenv
+    source myvenv/bin/activate
+
+Windows
+    
+    pip install virtualenv
+    virtualenv myvenv
+    myvenv\Scripts\activate
+    
+=== Instalando o Django
+
+    pip install django
+    
+== Criando e configurando o projeto
+
+Linux
+
+    django-admin startproject projeto
+    
+Windows
+    
+    python myvenv\Scripts\django-admin.py startproject projeto .
+
+Ajustando TIME_ZONE
+
+Vá para a pasta "projeto", procure o arquivo "settings.py" e localize a opção "TIME_ZONE":
+
+    TIME_ZONE = 'America/Fortaleza'
+
+Mais exemplos de time zone podem ser encontrados aqui:
+
+    https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+== Criando App dentro do projeto
+
+Dentro da pasta "projeto" vamos criar uma aplicação:
+
+    python manage.py startapp app
+
+Abra o arquivo "settings.py" dentro da pasta "projeto", procure por "INSTALLED_APPS" e adicione no final da lista:
+  
+    'app'
+
+A lista parecida com algo assim:
+
+[source, python]
+----
+no final de :
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'app'
+    ]
+----
+
+== Configurando o Backend
+
+=== Criando o Model
+Abra o arquivo "models.py" dentro da pasta "app" e adicione:
+
+[source, python]
+----
+from django.db import models
+from django.utils import timezone
+
+class Jogada(models.Model):
+    linha = models.CharField(max_length=2)
+    coluna = models.CharField(max_length=2)
+    created_date = models.DateTimeField(default=timezone.now)
+----
+
+Referência:
+    https://docs.djangoproject.com/pt-br/1.10/topics/db/models/
+
+=== Configurando o Banco
+ 
+Abra o arquivo "settings.py" dentro da pasta "projeto", procure a parâmetro "DATABASES":
+
+[source, python]
+----
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+----
+
+==== Migrando os models para o banco 
+
+Execute os seguintes comandos:
+
+    python manage.py makemigrations app
+    python manage.py migrate
+
+=== Subindo o servidor de aplicação
+
+Execute o seguinte comando:
+
+    python manage.py runserver
+
+Acesse a URL:
+    
+    http://127.0.0.1:8000/
+
+
+== Configurando o FrontEnd
+
+=== Tratando arquivos estáticos
+
+Abra o arquivo "settings.py" dentro da pasta "projeto" e a baixo de  "STATIC_URL" adicione:
+        
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static') 
+
+a seguir 
+
+. Crie a pasta "static" dentro da pasta "app"
+. Crie as pastas "css" dentro da pasta "app/static"
+. Crie as pastas "js" dentro da pasta "app/static"
+  
+=== Tratando rotas
+
+Abra o arquivo "url.py" dentro da pasta "projeto" e observe a expressão regular dentro da lista "urlpatterns":
+
+[source, python]
+----
+url(r'^admin/', admin.site.urls),
+----
+
+Notação REGEX:
+
+    ^  : para o início do texto
+    $  : para o final do texto 
+    \d : para um dígito 
+    +  : para indicar que o item anterior deve ser repetido pelo menos uma vez 
+    () : para capturar parte do padrão
+
+Altetando o arquivo :
+
+[source, python]
+----
+from django.conf.urls import url, include
+from django.contrib import admin
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'', include('app.urls')),
+]
+----
+ 
+Crie o arquivo "urls.py" dentro da pasta "app" e adicione:
+
+[source, python]
+----
+from django.conf.urls import include, url
+from . import views
+
+urlpatterns = [
+    
+]
+----
+
+=== Criando View
+
+Crie a pasta "templates" dentro de "app", em seguida crie o arquivo "base.html" dentro de "app/templates".
+
+Abra o arquivo 'base.html' e adicione:
+
+[source, html]
+----
+{% load staticfiles %}
+<html>
+    <head>
+        <title>Bessalha Naval</title>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+    </head>
+    <body>
+        <div class="page-header">
+            <h1><a href="/">Campo Minado</a></h1>
+        </div>
+
+        <div class="content container">
+            <div class="row">
+                <div class="col-md-8">
+                {% block content %}
+                {% endblock %}
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+----
+
+Próximo passo será criar o arquivo "post_list.html" dentro de "app/templates", em seguida adicione:
+
+[source, html]
+----
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <p>Funcionando</p>
+
+{% endblock %}
+----
+
+Depois, abra o arquivo "views.py" dentro da pasta "app" e adicione:
+
+[source, python]
+----
+def post_list(request):
+    return render(request, 'post_list.html', {})        
+----
+
+Finalmente abri o arquivo "urls.py" dentro da pasta "app" e adicione:
+
+[source, python]
+----
+from django.conf.urls import include, url
+from . import views
+
+urlpatterns = [
+    url(r'teste/$', views.post_list),    
+]
+----
+
+== Integrando a View com o Model
+
+=== Django QuerySet 
+
+Shell de acesso ao banco de dados:
+        
+    python manage.py shell
+    
+Import o model que deseja pesquisar:
+
+    from app.models import Jogada
+
+Realize as seguintes consultas :
+
+. Para obter todos os registros da tabela "Jogada":
+    
+    Jogada.objects.all()
+        
+. Para criar uma nova "Jogada":
+            
+    Jogada.objects.create( linha='1', coluna='1')
+        
+. Para buscar com filtro:
+
+    Jogada.objects.filter(linha='1')
+    Jogada.objects.get(id=1)
+
+
+=== Criando Formulários
+
+Crie um formulário para enviar as jogadas. Para isso procure o arquivo "forms.py" dentro da pasta "app" e o adicione o seguinte conteúdo:
+
+[source, python]
+----    
+from django import forms
+from .models import Jogada
+
+class JogadaForm(forms.ModelForm):
+    
+    class Meta:
+        model = Jogada
+        fields = ('linha','coluna')
+----
+
+Abra o arquivo "views.py" dentro da pasta "app" e altere a função "post_list":
+    
+[source, python]
+----
+def post_list(request):
+    
+    if request.method == "POST":
+        form = JogadaForm(request.POST)
+        if form.is_valid():
+            jogada = form.save(commit=False)
+            jogada.created_date = timezone.now()
+            jogada.save()
+    else:
+        form = JogadaForm()
+
+    return render(request, 'post_list.html', {'form': form})
+----
+
+Abra o arquivo "post_list.html" dentro da pasta "templates" e altere o seu conteúdo para:
+
+[source, html]
+----
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Nova Jogada</h1>
+    <form method="POST" class="post-form">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="save btn btn-default">salvar</button>
+    </form>
+
+{% endblock %}
+----
+
+Para recuper as jogadas salvas, abra o arquivo "views.py" dentro da pasta "app" e altere:
+
+[source, python]
+----
+def post_list(request):
+if request.method == "POST":
+    form = JogadaForm(request.POST)
+    if form.is_valid():
+        jogada = form.save(commit=False)
+        jogada.created_date = timezone.now()
+        jogada.save()
+else:
+    form = JogadaForm()
+
+jogadas = Jogada.objects.all()
+
+return render(request, 'post_list.html', {'form': form, 'jogadas':jogadas})
+----
+
+Por último, abra o arquivo "post_list.html" dentro da pasta "templates" e altere o "block content" para ficar assim:
+[source, html]
+----
+<h1>Nova Jogada</h1>
+<form method="POST" class="post-form">{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="save btn btn-default">Jogar</button>
+</form>
+
+<div class="box-body">
+    <table>
+        <thead>
+            <tr>
+                <th>Linha </th>
+                <th>Coluna </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for jogada in jogadas %}
+            <tr>
+                <td>{{ jogada.linha }}</td>
+                <td>{{ jogada.coluna }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+----        
