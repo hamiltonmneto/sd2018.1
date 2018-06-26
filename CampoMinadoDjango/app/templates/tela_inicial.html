@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div align="center">
+		<br>
+		<h2><p>Campo Minado</p></h2>
+		<form  action="partida" method="post">
+			{% csrf_token %}
+			<p>
+			<label>Tamanho do Tabuleiro</label>
+			</p>
+			<label>Número de linhas: </label> {{ entrada.linha }}
+			<br>
+			<br>
+			<label>Número de colunas: </label> {{ entrada.coluna }}
+			<br>
+			<br>
+			<p>
+			<input type="submit" name="novojogo" value="Jogar">
+			</p>
+			<br>
+		</form>
+	</div>
+{% endblock %}
